@@ -13,8 +13,10 @@ import contactTickets from "@tracht-digital-solutions/tds-ext-contact-tickets";
 import websiteCms from "@tracht-digital-solutions/tds-ext-website-cms";
 import blogCms from "@tracht-digital-solutions/tds-ext-blog-cms";
 import lexware from "@tracht-digital-solutions/tds-ext-lexware";
+import customers from "@tracht-digital-solutions/tds-ext-customers";
+import billing from "@tracht-digital-solutions/tds-ext-billing";
 
-const extensions = [timeTracker, supportTickets, contactTickets, websiteCms, blogCms, lexware];
+const extensions = [timeTracker, supportTickets, contactTickets, websiteCms, blogCms, lexware, customers, billing];
 
 // This product builds as the ADMIN target (shell auth-hint key + brand).
 process.env.PANEL_TARGET = "admin";
