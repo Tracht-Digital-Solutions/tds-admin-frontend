@@ -1,4 +1,4 @@
-# Agent notes — tds-admin-panel
+# Agent notes — tds-admin-frontend
 
 The **admin panel product** (`management.tracht-digital.de`). A standalone Astro app that
 composes the shared core panel **host** (`@tracht-digital-solutions/tds-core-panel-frontend`)
@@ -15,7 +15,7 @@ published packages.
   here beyond `astro.config.mjs` + config:
   - `corePanelBase()` (host package `./astro`) `injectRoutes` the base pages — Dashboard,
     Login, Nutzer, Einstellungen, API-Wiki — plus the shell + pre-paint auth gate.
-  - `panelHost({ extensions })` (from `tds-panel-contract`) injects each extension's route
+  - `panelHost({ extensions })` (from `tds-panel-contract-pkg`) injects each extension's route
     and folds its nav / widget / settings virtual modules into the composition.
   - `PANEL_TARGET=admin` selects the auth-hint key prefix (`tds_admin_*`) + brand ("Panel").
 - **The extension set is this repo's only real decision:** time-tracker, support-tickets,

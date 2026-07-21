@@ -24,10 +24,10 @@ Panel-eigenen Schritte im Detail.
 |---|---|---|---|
 | Identität | `tds-auth-api` | Login, RS256-JWT-Ausgabe + JWKS, `app_user`, Mitgliedschaften | `api.tracht-digital.de/auth` |
 | Panel-API-Kernel | `tds-core-panel-api` | komponiert die Extension-Module in-process (PDO, Mailer, JWT-Verify, SettingsStore) | `api.tracht-digital.de/*` |
-| API-Gateway | `tds-api-gateway` | einziger öffentlicher Eingang, routet nach Pfad-Präfix | `api.tracht-digital.de` |
-| Panel-Host | `tds-core-panel-frontend` | Shell + Basisseiten (als npm-Paket) | (Build-Zeit) |
+| API-Gateway | `tds-gateway-api` | einziger öffentlicher Eingang, routet nach Pfad-Präfix | `api.tracht-digital.de` |
+| Panel-Host | `tds-core-frontend-pkg` | Shell + Basisseiten (als npm-Paket) | (Build-Zeit) |
 | Extensions | `tds-ext-*` | Features (Tickets, CMS, Lexware, Tools …) | (Build-Zeit + Module in der API) |
-| **Admin-Panel** | **`tds-admin-panel`** | dieses Produkt: komponiert Host + Extensions → `dist/` | `management.tracht-digital.de` |
+| **Admin-Panel** | **`tds-admin-frontend`** | dieses Produkt: komponiert Host + Extensions → `dist/` | `management.tracht-digital.de` |
 
 ---
 
@@ -124,7 +124,7 @@ in-process.
 
 ---
 
-## 4. Gateway / Routing — `tds-api-gateway`
+## 4. Gateway / Routing — `tds-gateway-api`
 
 `api.tracht-digital.de` ist der einzige öffentliche Eingang. Das erste Pfad-Segment
 wählt das Backend; der Rest wird weitergereicht (`/auth/…` → auth-api, der Rest →
@@ -136,11 +136,11 @@ Panel-API-Kernel).
 - Nach dem Deploy: prüfen, dass `…/auth/.well-known/jwks.json` und die Panel-Routen
   (z. B. `…/admin/permissions`) erreichbar sind.
 
-Details: **`tds-api-gateway/INSTALL.md`**.
+Details: **`tds-gateway-api/INSTALL.md`**.
 
 ---
 
-## 5. Admin-Panel bauen & ausrollen — `tds-admin-panel` (dieses Repo)
+## 5. Admin-Panel bauen & ausrollen — `tds-admin-frontend` (dieses Repo)
 
 Das Panel selbst besteht nur aus `astro.config.mjs` (Komposition) + Deploy-Pipeline.
 Es wird aus veröffentlichten Paketen gebaut.
@@ -167,7 +167,7 @@ npm run build                   # → dist/
 
 - **Jeder Push auf `main`** baut das Panel und deployt direkt auf den
   **`release`-Branch** (`release.yml`), dann Ping an `DEPLOY_WEBHOOK_URL`.
-- Zusätzlich wird derselbe Deploy **automatisch angestoßen, wenn `tds-ext-tools`
+- Zusätzlich wird derselbe Deploy **automatisch angestoßen, wenn `tds-ext-tools-pkg`
   (oder eine andere Panel-Extension mit Dispatch) ein neues `@latest` publisht** —
   ein Extension-Release baut das Panel also ohne Handgriff neu.
 - Der manuelle Button (**Actions → „Deploy → release branch" → Run workflow**) bleibt
@@ -177,7 +177,7 @@ npm run build                   # → dist/
 
 Per CLI (manueller Redeploy):
 ```bash
-gh workflow run release.yml -R Tracht-Digital-Solutions/tds-admin-panel
+gh workflow run release.yml -R Tracht-Digital-Solutions/tds-admin-frontend
 ```
 
 Das Panel ist `noindex` + robots-disallowed — das ist **so gewollt** (internes Panel).
@@ -200,20 +200,20 @@ Das Panel ist `noindex` + robots-disallowed — das ist **so gewollt** (internes
 ## 7. Öffentliche Tools-Plattform anbinden (optional)
 
 Die öffentliche Tools-Seite `tools.tracht-digital.de` wird über die Extension
-**`tds-ext-tools`** (bereits im Panel enthalten) gesteuert.
+**`tds-ext-tools-pkg`** (bereits im Panel enthalten) gesteuert.
 
-1. Sicherstellen, dass `tds-ext-tools` released + das Panel damit gebaut ist (ist es).
+1. Sicherstellen, dass `tds-ext-tools-pkg` released + das Panel damit gebaut ist (ist es).
 2. In **Einstellungen → Tools / AdSense** setzen: AdSense-Publisher-ID + Slots,
-   Registry-Sync-Token (identisch als `TOOLS_REGISTRY_TOKEN` in `tds-tools`),
+   Registry-Sync-Token (identisch als `TOOLS_REGISTRY_TOKEN` in `tds-tools-frontend`),
    Rebuild-Repo/-Token, Stripe (für Premium-Tools).
 3. `CORS_ALLOWED_ORIGINS` (Schritt 3) muss `https://tools.tracht-digital.de`
    enthalten; den Stripe-Webhook auf `…/tools/stripe-webhook` zeigen lassen.
-4. Die Website selbst bereitstellen: **`tds-tools`** (eigenes Repo) — `DEPLOY_WEBHOOK_URL`
+4. Die Website selbst bereitstellen: **`tds-tools-frontend`** (eigenes Repo) — `DEPLOY_WEBHOOK_URL`
    setzen, **Release** drücken, Domain auf dessen `release`-Branch zeigen.
 
 Die **freien Tools + AdSense laufen unabhängig** vom Panel-Backend; der dynamische
 Katalog + Premium brauchen ein deploytes `tds-core-panel-api` (Schritt 3).
-Vollständige Anleitung: **`tds-tools/README.md`** + **`tds-ext-tools/README.md`**.
+Vollständige Anleitung: **`tds-tools-frontend/README.md`** + **`tds-ext-tools-pkg/README.md`**.
 
 ---
 
@@ -233,7 +233,7 @@ PHP-`Module`. Ein-/Ausbauen betrifft **zwei** Stellen (Frontend + Backend):
 3. **Version bumpen** (dieses Repo `package.json`) und **Release** drücken. Nach dem
    Deploy des Panels **und** des Kernels ist die Funktion live.
 
-Eine **neue** Extension entsteht aus `tds-ext-template` (Klonen + Umbenennen);
+Eine **neue** Extension entsteht aus `tds-ext-template-pkg` (Klonen + Umbenennen);
 Details in `tds-ext-template/README.md` und `tds-panel-contract/AGENTS.md`. Regeln:
 IDs (Extension/Permission/Nav/Widget/Settings/Route) sind **global eindeutig** (die
 Komposition bricht sonst hart ab); Extensions bleiben in der `0.1.x`-Linie.
@@ -245,7 +245,7 @@ Komposition bricht sonst hart ab); Extensions bleiben in der `0.1.x`-Linie.
 ### Secrets (GitHub)
 - **`PACKAGE_TOKEN`** (alle Plattform-Repos) — Install aus Packages + Publish +
   Branch-Push. Speist in der CI die Variable `NPM_TOKEN`.
-- **`DEPLOY_WEBHOOK_URL`** (`tds-admin-panel`, `tds-customer-panel`, `tds-tools`) —
+- **`DEPLOY_WEBHOOK_URL`** (`tds-admin-frontend`, `tds-customer-frontend`, `tds-tools-frontend`) —
   Deploy-Ping nach `release`.
 
 ### Backend-`.env` (Kernbegriffe)

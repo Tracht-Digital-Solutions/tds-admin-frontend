@@ -1,4 +1,4 @@
-# tds-admin-panel
+# tds-admin-frontend
 
 The **admin panel** product (`management.tracht-digital.de`). A standalone Astro
 app that composes the shared **core panel host**
@@ -13,7 +13,7 @@ owns only the composition + deploy pipeline:
 - `astro.config.mjs`:
   - `corePanelBase()` (from the host package) injects the shared base routes —
     Dashboard, Login, Nutzer, Einstellungen, API-Wiki + the shell/auth gate.
-  - `panelHost({ extensions })` (from `tds-panel-contract`) injects each
+  - `panelHost({ extensions })` (from `tds-panel-contract-pkg`) injects each
     extension's route + the widget/settings virtual modules.
   - `PANEL_TARGET = admin` selects the shell's auth-hint key + brand ("Panel").
 - The extension set (this repo's only real decision): time-tracker,
@@ -39,7 +39,7 @@ npm run build                   # → dist/  (the deployed artifact)
 
 Continuous: **every push to `main` builds + deploys** to the orphan `release` branch
 (`release.yml`) and pings `DEPLOY_WEBHOOK_URL`; the production host pulls `release`.
-The same deploy is dispatched automatically when `tds-ext-tools` publishes a new
+The same deploy is dispatched automatically when `tds-ext-tools-pkg` publishes a new
 `@latest` (a cross-repo `workflow_dispatch`), so an extension update rebuilds the
 panel with no manual step. The manual Actions button remains for on-demand redeploys.
 
