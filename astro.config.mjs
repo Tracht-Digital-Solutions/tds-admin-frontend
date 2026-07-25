@@ -10,6 +10,7 @@ import { tdsViteBuild } from "@tracht-digital-solutions/tds-shared/astro";
 import timeTracker from "@tracht-digital-solutions/tds-ext-time-tracker";
 import supportTickets from "@tracht-digital-solutions/tds-ext-support-tickets";
 import contactTickets from "@tracht-digital-solutions/tds-ext-contact-tickets";
+import liveChatCta from "@tracht-digital-solutions/tds-ext-live-chat-cta";
 import websiteCms from "@tracht-digital-solutions/tds-ext-website-cms";
 import blogCms from "@tracht-digital-solutions/tds-ext-blog-cms";
 import lexware from "@tracht-digital-solutions/tds-ext-lexware";
@@ -20,7 +21,7 @@ import messages from "@tracht-digital-solutions/tds-ext-messages";
 import projects from "@tracht-digital-solutions/tds-ext-projects";
 import documents from "@tracht-digital-solutions/tds-ext-documents";
 
-const extensions = [timeTracker, supportTickets, contactTickets, websiteCms, blogCms, lexware, customers, billing, tools, messages, projects, documents];
+const extensions = [timeTracker, supportTickets, contactTickets, liveChatCta, websiteCms, blogCms, lexware, customers, billing, tools, messages, projects, documents];
 
 // This product builds as the ADMIN target (shell auth-hint key + brand).
 process.env.FRONTEND_TARGET = "admin";

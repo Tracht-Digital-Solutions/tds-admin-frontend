@@ -19,7 +19,7 @@ published packages.
     and folds its nav / widget / settings virtual modules into the composition.
   - `FRONTEND_TARGET=admin` selects the auth-hint key prefix (`tds_admin_*`) + brand ("Frontend").
 - **The extension set is this repo's only real decision:** time-tracker, support-tickets,
-  contact-tickets, website-cms, blog-cms, lexware, customers, billing.
+  contact-tickets, live-chat-cta, website-cms, blog-cms, lexware, customers, billing.
   Adding/removing a feature = change the `extensions` array + its dep, bump, release.
 - **To change the shell or a base page, edit the *host* package and release it, then repin
   the dep here.** Never fork base UI into this repo.
