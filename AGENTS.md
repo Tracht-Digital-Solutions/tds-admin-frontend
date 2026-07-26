@@ -51,6 +51,32 @@ npm run build                   # → dist/  (FRONTEND_TARGET=admin)
 - **`release` branch** — the manual Actions button (`release.yml`): builds, force-pushes
   `dist/` to `release`, pings `DEPLOY_WEBHOOK_URL`. The production host pulls `release`.
 
+## Tests
+
+`npm run test:run` (vitest). This repo has no `src/` — its whole job is one
+composition decision, so `test/composition.test.ts` tests that decision against
+the **real installed extension manifests**, not fixtures.
+
+- `composeExtensions()` runs over the actual admin set and must not throw. It
+  hard-errors on any duplicate extension id, nav id, widget id or route — the FE
+  twin of the shared-`phinxlog` rule — but normally only during a full product
+  build, far from whoever introduced the collision.
+- Every nav entry must target a route some extension or the host actually
+  serves, or it is a 404 in the shipped panel. No extension route may shadow a
+  base route (`/`, `/users`, `/einstellungen`, `/wiki`).
+- **`frontendHost` must keep its `layout` option.** Dropping it ships every
+  extension page as a bare unstyled fragment with no `<head>` — the documented
+  "admin frontend has no formatting" bug. Verified: removing it fails the suite.
+- The build stays `output: "static"`, Tailwind stays on PostCSS, `tdsViteBuild`
+  stays spread, and `FRONTEND_TARGET` stays `admin` on **both** env vars.
+- Imports, `dependencies` and the array handed to `frontendHost` must agree in
+  all three directions. A missing dependency works locally via hoisted
+  `node_modules` and fails only the clean CI install; an import that never
+  reaches the array is a silently missing feature.
+
+Adding an extension therefore means three edits — the import, the `extensions`
+array and `dependencies` — and the suite fails if you miss one.
+
 ## Version
 
 Bump `package.json` `version` on any composition/config/doc change, and commit the docs +
