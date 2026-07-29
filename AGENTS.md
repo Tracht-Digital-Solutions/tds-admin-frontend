@@ -17,7 +17,11 @@ published packages.
     Login, Nutzer, Einstellungen, API-Wiki — plus the shell + pre-paint auth gate.
   - `frontendHost({ extensions })` (from `tds-frontend-contract-pkg`) injects each extension's route
     and folds its nav / widget / settings virtual modules into the composition.
-  - `FRONTEND_TARGET=admin` selects the auth-hint key prefix (`tds_admin_*`) + brand ("Frontend").
+  - `FRONTEND_TARGET=admin` selects the auth-hint key prefix (`tds_admin_*`), the brand suffix
+    ("Panel"), and — since host 0.13.0 / tds-shared 0.15.0 — the **accent hue**: the host emits
+    `<html data-frontend="admin">` and `surfaces/panel.css` paints this product in the brand
+    **navy** (the customer portal reads teal). That is the only visual difference between the
+    two products; it is one token block in tds-shared, not anything this repo configures.
 - **The extension set is this repo's only real decision:** time-tracker, support-tickets,
   contact-tickets, live-chat-cta, website-cms, blog-cms, lexware, customers, billing.
   Adding/removing a feature = change the `extensions` array + its dep, bump, release.
