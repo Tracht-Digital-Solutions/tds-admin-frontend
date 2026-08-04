@@ -30,6 +30,12 @@ published packages.
 
 ## Gotchas
 
+- **The toast stack is the host's, and there is exactly one.** The shell mounts
+  `ToastHost` (tds-shared) once; extensions only *raise* toasts. If a page ever
+  shows every message twice, something mounted a second host — that is the first
+  thing to check. Requires tds-shared `^0.16.0` + host `^0.14.0`, which is why
+  those two pins moved together: a `0.x` caret is minor-locked, so `^0.15.0`
+  would have kept resolving the toast-less build.
 - **`npm install --no-package-lock`** — the Windows-generated lockfile is win32-only and
   breaks the Linux CI build (`npm ci` fails). CI uses `--no-package-lock`; match it locally.
 - **Host pins each extension `^0.1.x`** (0.x caret = `>=0.1.1 <0.2.0`) — an extension bump
