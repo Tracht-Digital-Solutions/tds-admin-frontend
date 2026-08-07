@@ -33,9 +33,15 @@ published packages.
 - **The toast stack is the host's, and there is exactly one.** The shell mounts
   `ToastHost` (tds-shared) once; extensions only *raise* toasts. If a page ever
   shows every message twice, something mounted a second host — that is the first
-  thing to check. Requires tds-shared `^0.16.0` + host `^0.14.0`, which is why
+  thing to check. Introduced in tds-shared 0.16.0 + host 0.14.0, which is why
   those two pins moved together: a `0.x` caret is minor-locked, so `^0.15.0`
-  would have kept resolving the toast-less build.
+  would have kept resolving the toast-less build. (That is provenance, not the
+  current requirement — read `package.json` for the pins in force.)
+- **Mobile behaviour comes from the library, not from this repo.** Since
+  tds-shared 0.18.0 a `.tds-table` scrolls itself below 40rem, `.tds-page__head`
+  stacks, interactive chips take the 44px touch target and the fixed bottom
+  elements clear the home indicator. Don't wrap a table in an `overflow-x` here
+  and don't add a competing breakpoint — fix it in tds-shared and repin.
 - **`npm install --no-package-lock`** — the Windows-generated lockfile is win32-only and
   breaks the Linux CI build (`npm ci` fails). CI uses `--no-package-lock`; match it locally.
 - **Host pins each extension `^0.1.x`** (0.x caret = `>=0.1.1 <0.2.0`) — an extension bump
