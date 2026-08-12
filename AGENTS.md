@@ -20,8 +20,13 @@ published packages.
   - `FRONTEND_TARGET=admin` selects the auth-hint key prefix (`tds_admin_*`), the brand suffix
     ("Panel"), and — since host 0.13.0 / tds-shared 0.15.0 — the **accent hue**: the host emits
     `<html data-frontend="admin">` and `surfaces/panel.css` paints this product in the brand
-    **navy** (the customer portal reads teal). That is the only visual difference between the
-    two products; it is one token block in tds-shared, not anything this repo configures.
+    **burgundy** (`--color-management`), while the customer portal keeps the brand navy. That
+    is the only visual difference between the two products; it is one token block in
+    tds-shared, not anything this repo configures.
+    - **The red is the point.** This is the management surface — where user permissions,
+      module deploys and every destructive action live — so it is the one that carries a
+      standing visual marker. Since tds-shared **0.20.0** the ADMIN block is the override
+      and navy is the base; before that it was navy here and teal in the portal.
 - **The extension set is this repo's only real decision:** time-tracker, support-tickets,
   contact-tickets, live-chat-cta, website-cms, blog-cms, lexware, customers, billing.
   Adding/removing a feature = change the `extensions` array + its dep, bump, release.
