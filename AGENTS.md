@@ -25,7 +25,7 @@ published packages.
     tds-shared, not anything this repo configures.
     - **The red is the point.** This is the management surface — where user permissions,
       module deploys and every destructive action live — so it is the one that carries a
-      standing visual marker. Since tds-shared **0.20.0** the ADMIN block is the override
+      standing visual marker. Since tds-shared **0.20.1** the ADMIN block is the override
       and navy is the base; before that it was navy here and teal in the portal.
 - **The extension set is this repo's only real decision:** time-tracker, support-tickets,
   contact-tickets, live-chat-cta, website-cms, blog-cms, lexware, customers, billing.
