@@ -12,7 +12,7 @@ owns only the composition + deploy pipeline:
 
 - `astro.config.mjs`:
   - `coreFrontendBase()` (from the host package) injects the shared base routes —
-    Dashboard, Login, Nutzer, Einstellungen, API-Wiki + the shell/auth gate.
+    Dashboard, Login, Nutzer, Einstellungen, `/wiki` (API-Referenz here) + the shell/auth gate.
   - `frontendHost({ extensions })` (from `tds-frontend-contract-pkg`) injects each
     extension's route + the widget/settings virtual modules.
   - `FRONTEND_TARGET = admin` selects the shell's auth-hint key + brand ("Frontend").
