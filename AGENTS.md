@@ -14,7 +14,7 @@ published packages.
 - **Everything is assembled at build time from GitHub Packages.** There is no app source
   here beyond `astro.config.mjs` + config:
   - `coreFrontendBase()` (host package `./astro`) `injectRoutes` the base pages — Dashboard,
-    Login, Nutzer, Einstellungen, `/wiki` (the API-Referenz in this build) — plus the
+    Login, Benutzer, Einstellungen, `/wiki` (the API-Referenz in this build) — plus the
     shell + pre-paint auth gate.
   - `frontendHost({ extensions })` (from `tds-frontend-contract-pkg`) injects each extension's route
     and folds its nav / widget / settings virtual modules into the composition.
