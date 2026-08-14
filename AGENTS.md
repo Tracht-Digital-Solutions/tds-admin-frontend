@@ -85,7 +85,8 @@ the **real installed extension manifests**, not fixtures.
   build, far from whoever introduced the collision.
 - Every nav entry must target a route some extension or the host actually
   serves, or it is a 404 in the shipped panel. No extension route may shadow a
-  base route (`/`, `/users`, `/einstellungen`, `/wiki`).
+  base route (`/`, `/users`, `/firma`, `/profil`, `/module`, `/einstellungen`,
+  `/wiki`).
 - **`frontendHost` must keep its `layout` option.** Dropping it ships every
   extension page as a bare unstyled fragment with no `<head>` — the documented
   "admin frontend has no formatting" bug. Verified: removing it fails the suite.
