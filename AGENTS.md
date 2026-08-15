@@ -28,6 +28,12 @@ published packages.
       module deploys and every destructive action live — so it is the one that carries a
       standing visual marker. Since tds-shared **0.20.1** the ADMIN block is the override
       and navy is the base; before that it was navy here and teal in the portal.
+    - Since tds-shared **0.23.0** ("Digitale Maßarbeit") the panel canvas is warm (a 3%
+      accent tint over a sand/paper blend, plus two very soft brand fields at the outer
+      edges) and the page-head accent is the three-part brand bar. Both keep
+      `--tds-panel-accent` as their first term, so the management red still reads as the
+      management red — the warmth is shared, the signal is not. Nothing here configures
+      any of it; repin the host and tds-shared and it arrives.
 - **The extension set is this repo's only real decision:** time-tracker, support-tickets,
   contact-tickets, live-chat-cta, website-cms, blog-cms, lexware, customers, billing.
   Adding/removing a feature = change the `extensions` array + its dep, bump, release.
