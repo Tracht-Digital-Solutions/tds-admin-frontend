@@ -1,6 +1,6 @@
 {
   "name": "tds-admin-frontend",
-  "version": "0.11.0",
+  "version": "0.11.1",
   "description": "Admin panel product (management.tracht-digital.de): composes the core panel host with the admin extension set. Deployed from its own dev/release branches.",
   "license": "UNLICENSED",
   "private": true,
@@ -34,7 +34,7 @@
     "@tracht-digital-solutions/tds-ext-tools": "^0.1.0",
     "@tracht-digital-solutions/tds-ext-website-cms": "^0.1.1",
     "@tracht-digital-solutions/tds-frontend-contract": "^1.4.0",
-    "@tracht-digital-solutions/tds-shared": "^0.23.0",
+    "@tracht-digital-solutions/tds-shared": "^0.24.0",
     "astro": "^7.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
