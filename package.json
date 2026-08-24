@@ -34,7 +34,7 @@
     "@tracht-digital-solutions/tds-ext-tools": "^0.1.0",
     "@tracht-digital-solutions/tds-ext-website-cms": "^0.1.1",
     "@tracht-digital-solutions/tds-frontend-contract": "^1.4.0",
-    "@tracht-digital-solutions/tds-shared": "^0.28.0",
+    "@tracht-digital-solutions/tds-shared": "^0.31.0",
     "astro": "^7.1.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
