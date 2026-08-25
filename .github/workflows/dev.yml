@@ -1,0 +1,77 @@
+name: Dev build → dev branch
+
+# On every push to main (and manual), build the panel and force-publish the
+# RELEASE TREE to the orphan `dev` branch — the continuously-built dev artifact +
+# build gate. NOT deployed; production goes via release.yml, which is the manual
+# button only. Installs the host + extensions from GitHub Packages
+# (NPM_TOKEN = PACKAGE_TOKEN via the committed .npmrc).
+#
+# This workflow is also what tds-ext-tools-pkg dispatches after a @latest
+# publish (its `rebuild_workflow` input). It used to dispatch release.yml, which
+# meant a commit in that repo deployed this panel to production.
+#
+# `release/`, not `dist/`, since 2026-08-25: the product is server-rendered, so
+# the deployable artefact is an application tree (app.cjs + server/ + client/ +
+# a prebuilt node_modules), assembled by scripts/pack-release.mjs as postbuild.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: dev-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      NPM_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install
+        run: npm install --no-package-lock
+
+      - name: Test (vitest)
+        # The composition suite is the only check that the pinned extension set
+        # still composes without an id/route collision, that the host keeps its
+        # `layout`, and that the SSR posture is intact. It gated nothing until
+        # 2026-08-25.
+        run: npm run test:run
+
+      - name: Build
+        # `postbuild` packs release/; its verify() step fails the build if a
+        # first-party import survived into the server bundle.
+        run: npm run build
+
+      - name: Stamp build
+        # Inside client/, the document root — server/ and the app root are
+        # deliberately not web-reachable.
+        run: |
+          mkdir -p release/client
+          {
+            echo "channel=dev"
+            echo "commit=${GITHUB_SHA}"
+            echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "workflow_run=${GITHUB_RUN_ID}"
+          } > release/client/.build-info
+
+      - name: Publish release tree to dev
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.PACKAGE_TOKEN }}
+          publish_dir: ./release
+          publish_branch: dev
+          force_orphan: true
+          commit_message: "dev ${{ github.sha }}"

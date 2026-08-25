@@ -1,14 +1,34 @@
-name: Deploy → release branch (push + manual + dispatch)
+name: Release → release branch (manual)
 
-# Production deploy. Runs on every push to main, on the manual button, AND when an
-# extension package dispatches it (workflow_dispatch from a tds-ext-* release).
-# Builds the panel, force-publishes dist/ to the orphan `release` branch (the
-# production host pulls this), then pings the deploy webhook. Installs host +
-# extensions from GitHub Packages (NPM_TOKEN = PACKAGE_TOKEN via the committed .npmrc).
+# Production deploy, ONLY on the manual button. Builds the panel, force-publishes
+# the RELEASE TREE to the orphan `release` branch (the production host pulls
+# this), then pings the deploy webhook. Installs host + extensions from GitHub
+# Packages (NPM_TOKEN = PACKAGE_TOKEN via the committed .npmrc).
+#
+# `release/`, not `dist/`, since 2026-08-25: this product is server-rendered, so
+# the host needs the SSR bundle, the Passenger startup file and a prebuilt
+# node_modules alongside the document root. scripts/pack-release.mjs (from
+# tds-shared) assembles it as a postbuild and refuses to produce a tree that
+# could not start on the host.
+#
+# ─── This used to run on every push to main, and on a dispatch from any
+#     tds-ext-* release. Both are gone, deliberately.
+#
+# While `release` was a folder of static files, an accidental publish was at
+# worst wrong content. It is an APPLICATION now: pushed at a domain still
+# configured for static serving it takes the panel down on EVERY path until
+# Plesk restarts the app. That must not be a side effect of a routine push —
+# the same reasoning that made tds-tools-frontend manual-only on 2026-08-24.
+#
+# The extension dispatch was worse: tds-ext-tools-pkg auto-releases a patch on
+# every push to ITS main and then dispatched THIS workflow, so a commit in a
+# different repo deployed the admin panel to production. That dispatch now
+# targets dev.yml (see tds-ext-tools-pkg/_build.yml, input `rebuild_workflow`).
+#
+# Continuous building still happens — dev.yml publishes the same tree to the
+# orphan `dev` branch on every push, without deploying.
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -35,14 +55,37 @@ jobs:
       - name: Install
         run: npm install --no-package-lock
 
+      - name: Test (vitest)
+        # The composition suite gated nothing until 2026-08-25 — this pipeline
+        # was install -> build -> publish. It is the only check that the pinned
+        # extension set still composes without an id/route collision, that the
+        # host still gets its `layout`, and that the SSR posture is intact.
+        run: npm run test:run
+
       - name: Build
+        # `postbuild` packs release/ and its verify() step fails the build if a
+        # first-party import survived into the server bundle, or if any bare
+        # specifier would be unresolvable on the host.
         run: npm run build
 
-      - name: Publish dist to release
+      - name: Stamp build
+        # Inside client/, which is the document root. Anywhere else in the
+        # release tree it would not be fetchable — server/ and the app root are
+        # deliberately not web-reachable.
+        run: |
+          mkdir -p release/client
+          {
+            echo "channel=release"
+            echo "commit=${GITHUB_SHA}"
+            echo "built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo "workflow_run=${GITHUB_RUN_ID}"
+          } > release/client/.build-info
+
+      - name: Publish release tree to release branch
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.PACKAGE_TOKEN }}
-          publish_dir: ./dist
+          publish_dir: ./release
           publish_branch: release
           force_orphan: true
           commit_message: "release ${{ github.sha }}"

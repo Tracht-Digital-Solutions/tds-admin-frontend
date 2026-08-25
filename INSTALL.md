@@ -5,7 +5,8 @@ alles, was es dafür braucht, von Grund auf bereit — Datenbank, Identität,
 Frontend-API, Gateway, der Frontend-Build/Deploy, die Erstkonfiguration und optional die
 öffentliche Tools-Plattform.
 
-> Das Admin-Frontend ist eine **statische Astro-App**, die zur Build-Zeit aus
+> Das Admin-Frontend ist eine **server-gerenderte Astro-App** (Node-Adapter,
+> standalone, unter Plesks Passenger), die zur Build-Zeit aus
 > veröffentlichten Paketen (Host + Extensions) zusammengesetzt wird. Es hat
 > **kein eigenes Backend** — die Daten liefern `tds-auth-api` (Login/JWT) und
 > `tds-core-frontend-api` (der Frontend-API-Kernel mit allen Extension-Routen). Erst das
@@ -34,7 +35,9 @@ Frontend-eigenen Schritte im Detail.
 ## 0. Voraussetzungen
 
 - **Prod-Host** (netcup/Plesk): PHP 8.3, **MySQL 8**, Apache/nginx, integrierter
-  Composer. Kein Node-Runtime auf dem Prod-Host nötig (das Frontend ist statisch).
+  Composer **und Node 22** — seit 2026-08-25 ist auch dieses Frontend eine
+  Node-Anwendung. Aeltere Notizen, die hier "kein Node-Runtime noetig" sagen,
+  sind ueberholt.
 - **CI/Build** läuft auf GitHub Actions (Node 22). Lokal nur nötig, wenn du
   Backends selbst testest: PHP 8.3 + Composer, Node 22.
 - **Domains/Subdomains** eingerichtet und per HTTPS erreichbar:
@@ -163,21 +166,72 @@ npm run type-check              # astro check — 0 Fehler
 npm run build                   # → dist/
 ```
 
-### 5.3 Ausrollen (Continuous Delivery)
+### 5.3 Ausrollen
 
-- **Jeder Push auf `main`** baut das Frontend und deployt direkt auf den
-  **`release`-Branch** (`release.yml`), dann Ping an `DEPLOY_WEBHOOK_URL`.
-- Zusätzlich wird derselbe Deploy **automatisch angestoßen, wenn `tds-ext-tools-pkg`
-  (oder eine andere Frontend-Extension mit Dispatch) ein neues `@latest` publisht** —
-  ein Extension-Release baut das Frontend also ohne Handgriff neu.
-- Der manuelle Button (**Actions → „Deploy → release branch" → Run workflow**) bleibt
-  für einen On-Demand-Redeploy.
-- Den Prod-Host (`management.tracht-digital.de`) auf den **`release`-Branch** zeigen
-  lassen (Plesk: Git-Repo → Branch `release`, Deploy-Pfad = Web-Root).
+**Seit 2026-08-25 ist Deployen eine bewusste Handlung, kein Nebeneffekt.**
+
+- **Jeder Push auf `main`** baut das Frontend und veröffentlicht den Release-Baum
+  auf den **`dev`-Branch** (`dev.yml`). Das ist ein Build, **kein** Deploy.
+- **Produktion nur über den manuellen Button**: *Actions → „Release → release
+  branch" → Run workflow*. Der pusht nach `release` und pingt
+  `DEPLOY_WEBHOOK_URL`.
+- Der Auto-Dispatch aus `tds-ext-tools-pkg` zielt jetzt ebenfalls auf `dev.yml`.
+
+> **Warum das umgestellt wurde.** Solange `release` ein Ordner statischer
+> Dateien war, war ein versehentlicher Push höchstens falscher Inhalt. Der
+> Branch ist jetzt eine **Anwendung**; auf eine noch statisch konfigurierte
+> Domain gepusht, legt er das Panel auf *allen* Pfaden lahm, bis Plesk die App
+> neu startet. Und `tds-ext-tools-pkg` released bei jedem Push auf sein `main`
+> automatisch — ein Commit in einem fremden Repo hätte also hier deployt.
 
 Per CLI (manueller Redeploy):
 ```bash
 gh workflow run release.yml -R Tracht-Digital-Solutions/tds-admin-frontend
+```
+
+### 5.4 Den Prod-Host einrichten (Plesk, einmalig)
+
+`release` enthält jetzt `app.cjs`, `server/`, `client/`, ein vorgebautes
+`node_modules/` und `tmp/` — eine Node-Anwendung, kein Web-Root. Ausführlich in
+`tds-gateway-api/DEPLOY-PLESK.md` §3.2; das Nötigste:
+
+1. **Git → Repository hinzufügen**, Branch **`release`**, Zielpfad z. B.
+   `management.tracht-digital.de`.
+2. **Node.js aktivieren** und setzen:
+
+   | Feld | Wert |
+   |---|---|
+   | Node.js-Version | 22.x |
+   | Application Root | der Zielpfad aus Schritt 1 |
+   | **Document Root** | derselbe Pfad **+ `/client`** |
+   | Application Startup File | `app.cjs` |
+   | Application Mode | `production` |
+
+   **Document Root ≠ Application Root ist nicht kosmetisch:** auf den App-Root
+   gezeigt wären `server/entry.mjs`, `package.json` und `node_modules/` über das
+   Web erreichbar. Und die Startdatei muss `app.cjs` heißen — alle Pakete sind
+   `"type": "module"`, ein `.js` wäre ESM und Passengers `require()` stirbt mit
+   `ERR_REQUIRE_ESM`, sichtbar nur im App-Log.
+3. **Deployment-Aktion** eintragen, sonst läuft nach einem Deploy der alte Code
+   weiter (Passenger hält den Prozess offen):
+   ```sh
+   mkdir -p tmp && touch tmp/restart.txt
+   ```
+4. Unter *Apache & nginx → Zusätzliche Apache-Direktiven* empfohlen:
+   `PassengerMinInstances 1`.
+5. **Den bisherigen SPA-Fallback entfernen** (`try_files … /index.html` bzw. die
+   entsprechende Plesk-Regel). Bleibt er stehen, beantwortet er weiterhin jeden
+   unbekannten Pfad — und jeden fehlgeleiteten relativen API-Aufruf — mit `200`
+   und Dashboard-HTML. Das Panel wirkt dabei völlig gesund; genau das ist die
+   dokumentierte Ursache der „ruhig-leeren Liste ohne Logeintrag".
+
+Danach prüfen — und zwar am Statuscode, nicht am Aussehen der Seite:
+
+```bash
+curl -sI https://management.tracht-digital.de/irgendwas-das-es-nicht-gibt | head -1
+# HTTP/2 404   <- richtig.  200 heisst: der SPA-Fallback lebt noch.
+curl -sI https://management.tracht-digital.de/server/entry.mjs | head -1
+# HTTP/2 404   <- richtig. 200 heisst: Document Root zeigt auf den App-Root.
 ```
 
 Das Frontend ist `noindex` + robots-disallowed — das ist **so gewollt** (internes Frontend).

@@ -55,7 +55,24 @@ const config = readFileSync(new URL("../astro.config.mjs", import.meta.url), "ut
 const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8")) as {
   dependencies: Record<string, string>;
   scripts: Record<string, string>;
+  tds?: { release?: { name?: string; runtimeDependencies?: Record<string, string> } };
 };
+
+
+/** Apache config for the Passenger document root — shipped via `public/`. */
+const htaccess = readFileSync(new URL("../public/.htaccess", import.meta.url), "utf8");
+
+/**
+ * The directives Apache will actually execute, with `#` comment lines removed.
+ *
+ * Necessary, not tidiness: the file's own warning names `Options
+ * +FollowSymLinks` in prose in order to say *never add this*, so a test that
+ * greps the raw text fails on the warning rather than on the mistake.
+ */
+const htaccessCode = htaccess
+  .split(/\r?\n/)
+  .filter((line) => !/^\s*#/.test(line))
+  .join("\n");
 
 /** astro.config with comments stripped — it documents these traps in prose. */
 const configCode = config
@@ -163,9 +180,86 @@ describe("host wiring", () => {
     expect(configCode).not.toMatch(/=\s*"customer"/);
   });
 
-  it("stays a static build — there is no Node on the production host", () => {
-    expect(configCode).toMatch(/output:\s*"static"/);
-    expect(configCode).not.toMatch(/output:\s*"server"/);
+  // ─── SSR posture (2026-08-25) ─────────────────────────────────────────────
+  //
+  // This used to be a single assertion that the build "stays static — there is
+  // no Node on the production host". Both halves of that sentence are false
+  // now: the host has run Node apps under Passenger since 2026-08-24.
+  //
+  // Division of labour worth keeping in mind when adding to this block: vitest
+  // asserts DECLARED INTENT, and `verify()` inside pack-release.mjs asserts the
+  // PRODUCED TREE — that app.cjs, server/entry.mjs and client/.htaccess exist,
+  // that no first-party import survived into the server bundle, and that every
+  // bare specifier resolves in the packed node_modules. That one runs on every
+  // build, not only in CI, so there is no need to re-assert it here.
+
+  it("is server-rendered through the Node adapter", () => {
+    expect(configCode).toMatch(/output:\s*"server"/);
+    expect(configCode).not.toMatch(/output:\s*"static"/);
+    expect(configCode).toMatch(/adapter:\s*node\(/);
+    expect(configCode).toMatch(/mode:\s*"standalone"/);
+    expect(pkg.dependencies["@astrojs/node"]).toBeDefined();
+  });
+
+  it("bundles every first-party package into the server bundle", () => {
+    // The production host has no GitHub Packages token, so a surviving
+    // @tracht-digital-solutions/… specifier is ERR_MODULE_NOT_FOUND at boot.
+    expect(configCode).toMatch(/noExternal:[\s\S]*?\/\^@tracht-digital-solutions/);
+    expect(configCode).not.toMatch(/noExternal:\s*true/);
+  });
+
+  it("has no page cache", () => {
+    // A panel page belongs to one visitor. tds-shared/cache refuses to store a
+    // response carrying Set-Cookie and its cacheLocation cannot key on
+    // identity, so wiring it here would either store nothing or hand one
+    // visitor's page to the next. The three public sites are the consumers.
+    expect(configCode).not.toMatch(/tds-shared\/cache/);
+    expect(configCode).not.toMatch(/pageCache\(/);
+  });
+
+  it("needs no native image addon", () => {
+    // Astro's default image service is sharp. Nothing in the host or in any
+    // composed extension touches astro:assets, so declaring the passthrough
+    // service keeps a native addon out of every deploy.
+    expect(configCode).toMatch(/passthroughImageService\(\)/);
+    expect(pkg.tds?.release?.runtimeDependencies?.sharp).toBeUndefined();
+  });
+
+  it("declares a release tree the host can start without a registry token", () => {
+    const rel = pkg.tds?.release;
+    expect(rel?.name).toBe("tds-admin-release");
+    for (const dep of ["astro", "@astrojs/node", "react", "react-dom"]) {
+      expect(rel?.runtimeDependencies?.[dep], `runtime dependency ${dep}`).toBeDefined();
+    }
+    for (const dep of Object.keys(rel?.runtimeDependencies ?? {})) {
+      // Everything first-party is bundled instead; anything listed here is
+      // installed on the host from the PUBLIC registry.
+      expect(dep.startsWith("@tracht-digital-solutions/"), dep).toBe(false);
+    }
+  });
+
+  it("packs the release tree as a postbuild step", () => {
+    // From tds-shared rather than a repo-local copy: the script was already
+    // byte-identical in three sites, and this repo would have made it five.
+    expect(pkg.scripts.postbuild).toMatch(
+      /node node_modules\/@tracht-digital-solutions\/tds-shared\/scripts\/pack-release\.mjs/,
+    );
+  });
+
+  it("ships an .htaccess that cannot take the whole vhost down", () => {
+    // Plesk's AllowOverride grant omits FollowSymLinks, and an Option the host
+    // does not allow is FATAL rather than ignored: Apache answers EVERY request
+    // with 500 and logs `Option FollowSymLinks not allowed here`. That shipped
+    // once already, on 2026-08-24, and took tracht-digital.de down on every path.
+    expect(htaccessCode).not.toMatch(/FollowSymLinks/);
+    expect(htaccessCode).toMatch(/Options -Indexes/);
+    expect(htaccessCode).toMatch(/DirectoryIndex index\.html/);
+    // Private by default, and noindex on every response — not only the ones
+    // carrying the Layout's meta tag.
+    expect(htaccessCode).toMatch(/X-Robots-Tag/);
+    expect(htaccessCode).toMatch(/private, no-store/);
+    // No cache rules: that is the difference from the three public sites.
+    expect(htaccessCode).not.toMatch(/_tds-cache/);
   });
 
   it("spreads the shared tdsViteBuild preset", () => {
