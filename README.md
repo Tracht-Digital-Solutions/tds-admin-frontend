@@ -15,9 +15,14 @@ owns only the composition + deploy pipeline:
     Dashboard, Login, Benutzer, Einstellungen, `/wiki` (API-Referenz here) + the shell/auth gate.
   - `frontendHost({ extensions })` (from `tds-frontend-contract-pkg`) injects each
     extension's route + the widget/settings virtual modules.
-  - `FRONTEND_TARGET = admin` selects the shell's auth-hint key + brand ("Frontend").
+  - `FRONTEND_TARGET = admin` selects the shell's auth-hint key + brand ("Panel").
+- The host keeps the shell mounted across internal navigation, prefetches likely
+  destinations and preserves the selected theme + drawer state. CMS screens use
+  the shared stale-while-revalidate cache: known old values remain visible but are
+  dimmed and marked as refreshing until the API answers.
 - The extension set (this repo's only real decision): time-tracker,
-  support-tickets, contact-tickets, website-cms, blog-cms, lexware, (customers).
+  support-tickets, contact-tickets, website-cms, blog-cms, lexware, customers,
+  billing, projects, documents, messages, live-chat-cta and tools.
 
 To add/remove a feature: change the `extensions` array + the matching dep, bump,
 release. To change the shell/base pages: edit the **host** package and release it,
@@ -32,16 +37,20 @@ then repin here.
 ```bash
 npm install --no-package-lock   # host + extensions from GitHub Packages (needs NPM_TOKEN)
 npm run dev                     # astro dev
-npm run build                   # → dist/  (the deployed artifact)
+npm run type-check              # release/ is excluded: it is generated output
+npm run build                   # → dist/, then postbuild packs release/
+cd release && node app.cjs      # run the deployable tree exactly as the host does
 ```
 
 ## Deploy
 
-Continuous: **every push to `main` builds + deploys** to the orphan `release` branch
-(`release.yml`) and pings `DEPLOY_WEBHOOK_URL`; the production host pulls `release`.
-The same deploy is dispatched automatically when `tds-ext-tools-pkg` publishes a new
-`@latest` (a cross-repo `workflow_dispatch`), so an extension update rebuilds the
-frontend with no manual step. The manual Actions button remains for on-demand redeploys.
+- **`dev` branch** — auto-built on every push to `main` (`dev.yml`), not deployed.
+- **`release` branch** — the manual button (`release.yml`) builds the server
+  application, force-pushes `release/` and pings `DEPLOY_WEBHOOK_URL`.
+
+Production deploys are deliberately manual because `release/` is a running Node
+application (`app.cjs`, `server/`, `client/`, prebuilt `node_modules/`), not a
+folder of static files.
 
 Secrets: `PACKAGE_TOKEN` (install from Packages + push the branch),
 `DEPLOY_WEBHOOK_URL` (optional; unset ⇒ the branch still publishes, no host ping).

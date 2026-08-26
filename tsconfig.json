@@ -1,0 +1,11 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  },
+  "include": [".astro/types.d.ts", "**/*"],
+  // `postbuild` assembles a complete deploy application in release/, including
+  // bundled dependency sources. They are output, not code this product owns.
+  "exclude": ["dist", "release", "node_modules"]
+}

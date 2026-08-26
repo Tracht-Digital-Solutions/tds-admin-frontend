@@ -36,10 +36,16 @@ published packages.
       management red — the warmth is shared, the signal is not. Nothing here configures
       any of it; repin the host and tds-shared and it arrives.
 - **The extension set is this repo's only real decision:** time-tracker, support-tickets,
-  contact-tickets, live-chat-cta, website-cms, blog-cms, lexware, customers, billing.
+  contact-tickets, live-chat-cta, website-cms, blog-cms, lexware, customers, billing,
+  tools, messages, projects and documents.
   Adding/removing a feature = change the `extensions` array + its dep, bump, release.
 - **To change the shell or a base page, edit the *host* package and release it, then repin
   the dep here.** Never fork base UI into this repo.
+- **Internal navigation is deliberately app-like, not a document reload.** The host owns
+  Astro's `ClientRouter`, prefetch hints and the persisted shell regions. The drawer state
+  and theme must survive a route change; data consumers may keep a cached value visible
+  with the shared stale treatment while revalidating. Fix that contract in the host/shared
+  packages and repin here rather than adding product-local navigation code.
 
 ## Gotchas
 
@@ -57,9 +63,12 @@ published packages.
   and don't add a competing breakpoint — fix it in tds-shared and repin.
 - **`npm install --no-package-lock`** — the Windows-generated lockfile is win32-only and
   breaks the Linux CI build (`npm ci` fails). CI uses `--no-package-lock`; match it locally.
-- **Host pins each extension `^0.1.x`** (0.x caret = `>=0.1.1 <0.2.0`) — an extension bump
-  the product should pick up must stay in the `0.1.x` line. To jump an ext to `0.2.x`, bump
-  the dep range here first.
+- **`tsconfig.json` must exclude `release/`.** `postbuild` puts a complete application and
+  its bundled dependencies there; without the exclusion `astro check` reports errors from
+  generated dependency code instead of this product.
+- **Each extension is pinned to its current `0.MINOR.x` line** (a 0.x caret never crosses
+  the minor) — a release this product should pick up must stay in that extension's pinned
+  line. Crossing it requires a matching dependency update here first.
 - **`@source` in the host's `global.css` makes Tailwind scan the extension packages** for
   utility classes (node_modules is ignored by default). It's in the host, not here — don't
   add a competing `@source`, but know that ext-only utilities depend on it.
