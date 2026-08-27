@@ -26,7 +26,7 @@ published packages.
     is the only visual difference between the two products; it is one token block in
     tds-shared, not anything this repo configures.
     - **The red is the point.** This is the management surface — where user permissions,
-      module deploys and every destructive action live — so it is the one that carries a
+      content administration and every destructive action live — so it is the one that carries a
       standing visual marker. Since tds-shared **0.20.1** the ADMIN block is the override
       and navy is the base; before that it was navy here and teal in the portal.
     - Since tds-shared **0.23.0** ("Digitale Maßarbeit") the panel canvas is warm (a 3%
