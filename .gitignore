@@ -18,3 +18,7 @@ Thumbs.db
 Desktop.ini
 *.swp
 *~
+
+# Local build environment (see .env.example). Never commit a real one.
+.env
+.env.production

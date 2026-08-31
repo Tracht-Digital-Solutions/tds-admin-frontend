@@ -158,15 +158,77 @@ Es wird aus veröffentlichten Paketen gebaut.
 *Ohne `DEPLOY_WEBHOOK_URL` wird der `release`-Branch trotzdem veröffentlicht; nur
 der Host wird nicht automatisch benachrichtigt (dann manuell „Pull" im Plesk).
 
-### 5.2 Lokal bauen (optional, zur Kontrolle)
+### 5.2 An die API binden
+
+Drei Werte entscheiden, mit welcher API dieses Produkt spricht. Alle drei haben
+einen Produktions-Default — wer für die Produktion baut, setzt **nichts**.
+
+| Variable | Default | Wofür |
+|---|---|---|
+| `PUBLIC_API_BASE` | `https://api.tracht-digital.de` | Herkunft des Gateways, **ohne** Pfad. Jeder Extension-Aufruf wird dagegen aufgelöst. |
+| `PUBLIC_AUTH_API_URL` | `https://api.tracht-digital.de/auth` | `tds-auth-api`, **mit** dem `/auth`-Präfix des Gateways. Sitzungsprüfung (`GET /me`) und Erneuerung (`POST /refresh`). |
+| `PUBLIC_LOGIN_URL` | `https://auth.tracht-digital.de` | Die zentrale Login-Site. Abgemeldete Besucher landen dort mit `?next=<absolute Rückkehr-URL>`. |
+
+Vorlage: `.env.example` → `.env` (gitignored). Für einen lokalen Stack:
+
+```ini
+PUBLIC_API_BASE=http://localhost:8080
+PUBLIC_AUTH_API_URL=http://localhost:8080/auth
+PUBLIC_LOGIN_URL=http://localhost:4326
+```
+
+#### Der Unterschied zu den öffentlichen Sites
+
+**Diese Werte werden zur Build-Zeit ins Bundle einkompiliert.** Ein deploytes
+Panel auf eine andere API zu zeigen heißt: neu bauen und neu ausrollen. Es gibt
+keinen Schalter auf dem Host.
+
+Das ist kein Versäumnis, sondern der Gegenentwurf zu den öffentlichen Sites,
+die sich über `/install` zur Laufzeit koppeln lassen. `PUBLIC_API_BASE` landet
+als `<meta name="tds-api-base">` in der Shell des Hosts
+(`tds-core-frontend-pkg/src/layouts/Layout.astro`), und `runtimeConfig()` in
+`tds-shared/api` bricht **ab, sobald dieses Meta-Tag vorhanden ist** — ein
+Panel fragt `tds-runtime.json` also nie ab. Ohne diese Bremse würde jede
+einzelne Navigation im Panel einen garantierten 404 für eine Datei auslösen,
+die nur die öffentlichen Sites überhaupt besitzen.
+
+#### Die Gegenprobe, die man wirklich machen muss
+
+Eine falsche `PUBLIC_API_BASE` macht das Panel **nicht kaputt** — sie macht es
+still leer. Deshalb nach dem Ausrollen einmal ins Netzwerk-Panel des Browsers
+schauen:
+
+- Geht `/me` an die **absolute** API-Herkunft, nicht relativ an die eigene?
+- Antwortet sie `200` mit `Access-Control-Allow-Origin: <Herkunft dieses
+  Panels>` und `Access-Control-Allow-Credentials: true`?
+
+Fehlt der CORS-Kopf, verwirft der Browser die Antwort, **bevor** irgendein Code
+sie sieht. Serverseitig ist das kein Fehler, im Anwendungslog steht nichts, und
+die Oberfläche zeigt genau das, was sie auch bei „keine Daten vorhanden" zeigt.
+Die Herkunft muss in `CORS_ALLOWED_ORIGINS` der Backends stehen oder im Panel
+unter *Einstellungen → CORS* eingetragen sein; beide Ebenen werden vereinigt,
+nicht übersteuert.
+
+#### `PUBLIC_FRONTEND_TARGET` — nicht setzen
+
+`astro.config.mjs` dieses Repos setzt den Wert selbst. Im Build-Environment
+überschrieben baut dieses Produkt als **Kundenportal**: anderer Akzent, andere
+Hinweis-Schlüssel im `localStorage`, andere Beschriftung — mit dem
+Extension-Satz des Admin-Panels. Der Build bleibt grün.
+
+### 5.3 Lokal bauen (optional, zur Kontrolle)
 
 ```bash
 npm install --no-package-lock   # Host + Extensions aus Packages (NPM_TOKEN nötig)
 npm run type-check              # astro check — 0 Fehler
-npm run build                   # → dist/
+npm run build                   # → dist/ + release/
 ```
 
-### 5.3 Ausrollen
+`npm run build` liest die Werte aus 5.2 (`.env` oder Shell) und backt sie ein.
+Der gebaute Baum ist damit an **eine** API gebunden; ein Build für einen
+anderen Stack ist ein zweiter Build, kein zweites Deployment.
+
+### 5.4 Ausrollen
 
 **Seit 2026-08-25 ist Deployen eine bewusste Handlung, kein Nebeneffekt.**
 
@@ -189,7 +251,7 @@ Per CLI (manueller Redeploy):
 gh workflow run release.yml -R Tracht-Digital-Solutions/tds-admin-frontend
 ```
 
-### 5.4 Den Prod-Host einrichten (Plesk, einmalig)
+### 5.5 Den Prod-Host einrichten (Plesk, einmalig)
 
 `release` enthält jetzt `app.cjs`, `server/`, `client/`, ein vorgebautes
 `node_modules/` und `tmp/` — eine Node-Anwendung, kein Web-Root. Ausführlich in
