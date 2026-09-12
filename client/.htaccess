@@ -1,0 +1,70 @@
+# Tracht Digital Solutions — Verwaltungs-Panel, Astro SSR unter Passenger.
+#
+# Diese Datei landet in dist/client/.htaccess, und dieses Verzeichnis IST der
+# DocumentRoot der Passenger-Anwendung. Passenger liest .htaccess NICHT aus
+# Unterverzeichnissen, also muss jede Regel hier stehen.
+#
+# Deutlich kürzer als die Kopie der drei öffentlichen Sites, und das Fehlende
+# ist der Punkt: dort wird ein gespeicherter Render von der Platte serviert,
+# bevor Node überhaupt aufwacht. Eine Panel-Seite gehört einem Besucher, es gibt
+# hier also nichts zu speichern und entsprechend keine Cache-Regeln.
+#
+#   1. echte Datei auf der Platte  -> Apache liefert aus, Node schläft weiter
+#   2. prerenderte Seite           -> dito, über ihre index.html (/404, /500)
+#   3. alles andere                -> Passenger -> Node
+#
+# NIEMALS `Options +FollowSymLinks` ergänzen. Plesk gewährt seinen vhosts ein
+# eingeschränktes `AllowOverride Options=…` ohne diese Option, und eine nicht
+# erlaubte Option ist FATAL statt ignoriert: Apache beantwortet JEDE Anfrage mit
+# 500 und protokolliert `Option FollowSymLinks not allowed here`. Damit liegt
+# das ganze Panel, nicht nur die Regel, die danach gefragt hat. Am 2026-08-24
+# ist genau das auf tracht-digital.de passiert. Wird so etwas doch einmal
+# gebraucht, gehört es auf vhost-Ebene in Plesks "Zusätzliche Apache-Direktiven",
+# die AllowOverride nicht einschränkt.
+DirectoryIndex index.html
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Das gehashte Asset-Verzeichnis markieren, damit der immutable-Header unten
+  # nur für Dateien gilt, deren Name sich mit ihrem Inhalt ändert.
+  RewriteRule ^_astro/ - [E=TDS_IMMUTABLE:1]
+
+  # (1) Eine echte Datei: gehashte Assets, Schriften, Favicon, .build-info.
+  #     Geprüft wird DOCUMENT_ROOT + REQUEST_URI, NICHT REQUEST_FILENAME:
+  #     Passenger hängt sich in Apaches map_to_storage, und die Abbildung auf
+  #     Dateinamen ist nicht mehr belastbar, sobald es die Anfrage übernommen hat.
+  RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI} -f
+  RewriteRule ^ - [L]
+
+  # (2) Eine prerenderte Seite. /404 und /404/ landen auf derselben Datei:
+  #     build.format ist "directory" und trailingSlash "ignore". Das Muster
+  #     verlangt mindestens ein Zeichen, "/" erreicht also immer Node — sonst
+  #     würde das Dashboard von einer Datei beantwortet, die es nicht gibt.
+  RewriteCond %{DOCUMENT_ROOT}/$1/index.html -f
+  RewriteRule ^(.+?)/?$ /$1/index.html [L]
+
+  # (3) Weder Datei noch prerenderte Seite -> durchfallen zu Passenger.
+  #
+  #     WICHTIG beim ersten SSR-Deploy: der bisherige SPA-Fallback des vhosts
+  #     (try_files … /index.html) MUSS im selben Fenster entfernt werden. Bleibt
+  #     er stehen, beantwortet er weiterhin jeden unbekannten Pfad — und jeden
+  #     fehlgeleiteten relativen API-Aufruf — mit 200 und Dashboard-HTML. Das
+  #     Portal läuft dabei völlig normal, und genau deshalb fällt es nicht auf.
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set Cache-Control "public, max-age=31536000, immutable" env=TDS_IMMUTABLE
+
+  # Alles, was kein gehashtes Asset ist, ist eine private Panel-Antwort und darf
+  # weder im Browser noch in einem Zwischenspeicher liegenbleiben. Die negierte
+  # env-Prüfung hält das von _astro/ fern, ohne von der Reihenfolge abzuhängen.
+  Header always set Cache-Control "private, no-store" env=!TDS_IMMUTABLE
+
+  # Das Panel ist noindex. Der Layout setzt das Meta-Tag ohnehin; der Header
+  # deckt zusätzlich alles ab, was kein HTML ist oder was Node nicht gerendert hat.
+  Header always set X-Robots-Tag "noindex, nofollow"
+  Header always set Referrer-Policy "same-origin"
+  Header always set X-Content-Type-Options "nosniff"
+</IfModule>
