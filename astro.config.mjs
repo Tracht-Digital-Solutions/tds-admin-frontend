@@ -22,8 +22,9 @@ import tools from "@tracht-digital-solutions/tds-ext-tools";
 import messages from "@tracht-digital-solutions/tds-ext-messages";
 import projects from "@tracht-digital-solutions/tds-ext-projects";
 import documents from "@tracht-digital-solutions/tds-ext-documents";
+import cards from "@tracht-digital-solutions/tds-ext-cards";
 
-const extensions = [timeTracker, supportTickets, contactTickets, liveChatCta, websiteCms, blogCms, shop, lexware, customers, billing, tools, messages, projects, documents];
+const extensions = [timeTracker, supportTickets, contactTickets, liveChatCta, websiteCms, blogCms, shop, lexware, customers, billing, tools, messages, projects, documents, cards];
 
 // This product builds as the ADMIN target (shell auth-hint key + brand).
 process.env.FRONTEND_TARGET = "admin";
