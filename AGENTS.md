@@ -15,8 +15,9 @@ published packages.
 - **Everything is assembled at build time from GitHub Packages.** There is no app source
   here beyond `astro.config.mjs` + config:
   - `coreFrontendBase()` (host package `./astro`) `injectRoutes` the base pages — Dashboard,
-    Login, Benutzer, Einstellungen, `/wiki` (the API-Referenz in this build) — plus the
-    shell + pre-paint auth gate.
+    Benutzer, Profil, Firma, Module, Einstellungen, `/wiki` (the API-Referenz in this build),
+    404 and 500 — plus the shell + pre-paint auth gate. No `/login`: sign-in is the central
+    site. The list is exported as `BASE_ROUTE_PATTERNS`; the composition test reads it.
   - `frontendHost({ extensions })` (from `tds-frontend-contract-pkg`) injects each extension's route
     and folds its nav / widget / settings virtual modules into the composition.
   - `FRONTEND_TARGET=admin` selects the auth-hint key prefix (`tds_admin_*`), the brand suffix
@@ -37,7 +38,11 @@ published packages.
       any of it; repin the host and tds-shared and it arrives.
 - **The extension set is this repo's only real decision:** time-tracker, support-tickets,
   contact-tickets, live-chat-cta, website-cms, blog-cms, lexware, customers, billing,
-  tools, messages, projects and documents.
+  tools, messages, projects, documents, shop and cards.
+- **One tds-shared, decided here.** The host takes tds-shared as a peer (since host 0.29.0).
+  Before that it carried its own `^0.38.8`, and npm nested a second copy under it: the shell
+  ran on 0.38.8 while the extensions ran on 0.44 — two toast hosts, two theme states.
+  `npm ls @tracht-digital-solutions/tds-shared` must show exactly one version.
   Adding/removing a feature = change the `extensions` array + its dep, bump, release.
 - **To change the shell or a base page, edit the *host* package and release it, then repin
   the dep here.** Never fork base UI into this repo.
@@ -81,13 +86,13 @@ published packages.
 ```bash
 npm install --no-package-lock   # host + extensions from GitHub Packages (needs NPM_TOKEN)
 npm run dev                     # astro dev
-npm run build                   # → dist/  (FRONTEND_TARGET=admin)
+npm run build                   # → dist/, then postbuild assembles release/  (FRONTEND_TARGET=admin)
 ```
 
 - **`dev` branch** — auto-built on every push to `main` (`dev.yml`); staging artifact, not
   deployed.
 - **`release` branch** — the manual Actions button (`release.yml`): builds, force-pushes
-  `dist/` to `release`, pings `DEPLOY_WEBHOOK_URL`. The production host pulls `release`.
+  `release/` to `release`, pings `DEPLOY_WEBHOOK_URL`. The production host pulls `release`.
 
 ## Tests
 

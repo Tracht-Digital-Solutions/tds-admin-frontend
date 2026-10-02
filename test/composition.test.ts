@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { BASE_ROUTE_PATTERNS } from "@tracht-digital-solutions/tds-core-frontend/astro";
 import { describe, expect, it } from "vitest";
 import { composeExtensions } from "@tracht-digital-solutions/tds-frontend-contract";
 import type { ExtensionManifest } from "@tracht-digital-solutions/tds-frontend-contract";
@@ -124,7 +125,7 @@ describe("the extension set composes", () => {
     // A nav link to a route nobody injected is a 404 in the shipped panel.
     const { nav, routes } = composeExtensions(EXTENSIONS);
     const patterns = new Set(routes.map((r) => r.pattern));
-    const BASE = new Set(["/", "/users", "/einstellungen", "/wiki"]);
+    const BASE = new Set(BASE_ROUTE_PATTERNS);
     for (const entry of nav) {
       const target = entry.href.split("?")[0]!;
       expect(
@@ -150,7 +151,8 @@ describe("the extension set composes", () => {
 
   it("does not collide with the host's own base routes", () => {
     // coreFrontendBase injects these; an extension claiming one would shadow it.
-    const BASE = ["/", "/users", "/einstellungen", "/wiki"];
+    // Read from the host, not restated: the copy here had lost five of them.
+    const BASE = BASE_ROUTE_PATTERNS;
     const patterns = composeExtensions(EXTENSIONS).routes.map((r) => r.pattern);
     for (const base of BASE) {
       expect(patterns, `extension route shadows the base route ${base}`).not.toContain(base);

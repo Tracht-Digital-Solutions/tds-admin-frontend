@@ -28,7 +28,7 @@ Frontend-eigenen Schritte im Detail.
 | API-Gateway | `tds-gateway-api` | einziger öffentlicher Eingang, routet nach Pfad-Präfix | `api.tracht-digital.de` |
 | Frontend-Host | `tds-core-frontend-pkg` | Shell + Basisseiten (als npm-Paket) | (Build-Zeit) |
 | Extensions | `tds-ext-*` | Features (Tickets, CMS, Lexware, Tools …) | (Build-Zeit + Module in der API) |
-| **Admin-Frontend** | **`tds-admin-frontend`** | dieses Produkt: komponiert Host + Extensions → `dist/` | `management.tracht-digital.de` |
+| **Admin-Frontend** | **`tds-admin-frontend`** | dieses Produkt: komponiert Host + Extensions → `release/` | `management.tracht-digital.de` |
 
 ---
 
@@ -339,7 +339,7 @@ Eine Funktion ist eine **Extension** (`tds-ext-*`) — je Repo eine FE-Manifest 
 PHP-`Module`. Ein-/Ausbauen betrifft **zwei** Stellen (Frontend + Backend):
 
 1. **Frontend** (dieses Repo): das Manifest in `astro.config.mjs` `extensions[]`
-   ergänzen **und** die passende Dependency in `package.json` (Pin `^0.1.x`):
+   ergänzen **und** die passende Dependency in `package.json` (Caret auf die aktuelle Linie):
    ```js
    import feature from "@tracht-digital-solutions/tds-ext-feature";
    const extensions = [ …, feature ];
@@ -350,9 +350,10 @@ PHP-`Module`. Ein-/Ausbauen betrifft **zwei** Stellen (Frontend + Backend):
    Deploy des Frontends **und** des Kernels ist die Funktion live.
 
 Eine **neue** Extension entsteht aus `tds-ext-template-pkg` (Klonen + Umbenennen);
-Details in `tds-ext-template/README.md` und `tds-frontend-contract/AGENTS.md`. Regeln:
+Details in `tds-ext-template-pkg/README.md` und `tds-frontend-contract-pkg/AGENTS.md`. Regeln:
 IDs (Extension/Permission/Nav/Widget/Settings/Route) sind **global eindeutig** (die
-Komposition bricht sonst hart ab); Extensions bleiben in der `0.1.x`-Linie.
+Komposition bricht sonst hart ab); ein `0.x`-Caret ist minor-gesperrt, jede neue Minor
+einer Extension braucht hier ein bewusstes Repin.
 
 ---
 

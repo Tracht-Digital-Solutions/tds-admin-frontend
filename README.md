@@ -12,7 +12,8 @@ owns only the composition + deploy pipeline:
 
 - `astro.config.mjs`:
   - `coreFrontendBase()` (from the host package) injects the shared base routes —
-    Dashboard, Login, Benutzer, Einstellungen, `/wiki` (API-Referenz here) + the shell/auth gate.
+    Dashboard, Benutzer, Profil, Firma, Module, Einstellungen, `/wiki` (API-Referenz here),
+    the 404/500 pages + the shell/auth gate. There is no `/login`: sign-in is the central site.
   - `frontendHost({ extensions })` (from `tds-frontend-contract-pkg`) injects each
     extension's route + the widget/settings virtual modules.
   - `FRONTEND_TARGET = admin` selects the shell's auth-hint key + brand ("Panel").
@@ -22,7 +23,7 @@ owns only the composition + deploy pipeline:
   dimmed and marked as refreshing until the API answers.
 - The extension set (this repo's only real decision): time-tracker,
   support-tickets, contact-tickets, website-cms, blog-cms, lexware, customers,
-  billing, projects, documents, messages, live-chat-cta and tools.
+  billing, projects, documents, messages, live-chat-cta, tools, shop and cards.
 
 To add/remove a feature: change the `extensions` array + the matching dep, bump,
 release. To change the shell/base pages: edit the **host** package and release it,

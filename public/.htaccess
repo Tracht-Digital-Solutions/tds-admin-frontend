@@ -51,7 +51,7 @@ Options -Indexes
   #     (try_files … /index.html) MUSS im selben Fenster entfernt werden. Bleibt
   #     er stehen, beantwortet er weiterhin jeden unbekannten Pfad — und jeden
   #     fehlgeleiteten relativen API-Aufruf — mit 200 und Dashboard-HTML. Das
-  #     Portal läuft dabei völlig normal, und genau deshalb fällt es nicht auf.
+  #     Panel läuft dabei völlig normal, und genau deshalb fällt es nicht auf.
 </IfModule>
 
 <IfModule mod_headers.c>
