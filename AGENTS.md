@@ -1,151 +1,41 @@
-# Agent notes — tds-admin-frontend
+# AGENTS.md — tds-admin-frontend
 
 The **admin frontend product** (`management.tracht-digital.de`). A standalone Astro app that
-composes the shared core frontend **host** (`@tracht-digital-solutions/tds-core-frontend`)
-with the **admin extension set**, at build time, into one server-rendered Node
-application. This repo owns
-only the composition + deploy pipeline — the shell, base pages, and every feature live in
-published packages.
+composes the core frontend host (`@tracht-digital-solutions/tds-core-frontend`) with the
+admin extension set, at build time, into one server-rendered Node application. This repo
+owns only the composition and the deploy pipeline; the shell, base pages and every feature
+live in published packages.
 
-> Read the root `C:\Projects\TDS-LP\CLAUDE.md` for the big picture and the shared gotchas,
-> and `MIGRATION-STATUS.md` for how this product replaces the legacy `tds-admin`.
-
-## Mental model
-
-- **Everything is assembled at build time from GitHub Packages.** There is no app source
-  here beyond `astro.config.mjs` + config:
-  - `coreFrontendBase()` (host package `./astro`) `injectRoutes` the base pages — Dashboard,
-    Benutzer, Profil, Firma, Module, Einstellungen, `/wiki` (the API-Referenz in this build),
-    404 and 500 — plus the shell + pre-paint auth gate. No `/login`: sign-in is the central
-    site. The list is exported as `BASE_ROUTE_PATTERNS`; the composition test reads it.
-  - `frontendHost({ extensions })` (from `tds-frontend-contract-pkg`) injects each extension's route
-    and folds its nav / widget / settings virtual modules into the composition.
-  - `FRONTEND_TARGET=admin` selects the auth-hint key prefix (`tds_admin_*`), the brand suffix
-    ("Panel"), and — since host 0.13.0 / tds-shared 0.15.0 — the **accent hue**: the host emits
-    `<html data-frontend="admin">` and `surfaces/panel.css` paints this product in the brand
-    **burgundy** (`--color-management`), while the customer portal keeps the brand navy. That
-    is the only visual difference between the two products; it is one token block in
-    tds-shared, not anything this repo configures.
-    - **The red is the point.** This is the management surface — where user permissions,
-      content administration and every destructive action live — so it is the one that carries a
-      standing visual marker. Since tds-shared **0.20.1** the ADMIN block is the override
-      and navy is the base; before that it was navy here and teal in the portal.
-    - Since tds-shared **0.23.0** ("Digitale Maßarbeit") the panel canvas is warm (a 3%
-      accent tint over a sand/paper blend, plus two very soft brand fields at the outer
-      edges) and the page-head accent is the three-part brand bar. Both keep
-      `--tds-panel-accent` as their first term, so the management red still reads as the
-      management red — the warmth is shared, the signal is not. Nothing here configures
-      any of it; repin the host and tds-shared and it arrives.
-- **The extension set is this repo's only real decision:** time-tracker, support-tickets,
-  contact-tickets, live-chat-cta, website-cms, blog-cms, lexware, customers, billing,
-  tools, messages, projects, documents, shop and cards.
-- **One tds-shared, decided here.** The host takes tds-shared as a peer (since host 0.29.0).
-  Before that it carried its own `^0.38.8`, and npm nested a second copy under it: the shell
-  ran on 0.38.8 while the extensions ran on 0.44 — two toast hosts, two theme states.
-  `npm ls @tracht-digital-solutions/tds-shared` must show exactly one version.
-  Adding/removing a feature = change the `extensions` array + its dep, bump, release.
-- **To change the shell or a base page, edit the *host* package and release it, then repin
-  the dep here.** Never fork base UI into this repo.
-- **Internal navigation is deliberately app-like, not a document reload.** The host owns
-  Astro's `ClientRouter`, prefetch hints and the persisted shell regions. The drawer state
-  and theme must survive a route change; data consumers may keep a cached value visible
-  with the shared stale treatment while revalidating. Fix that contract in the host/shared
-  packages and repin here rather than adding product-local navigation code.
-
-## Gotchas
-
-- **The toast stack is the host's, and there is exactly one.** The shell mounts
-  `ToastHost` (tds-shared) once; extensions only *raise* toasts. If a page ever
-  shows every message twice, something mounted a second host — that is the first
-  thing to check. Introduced in tds-shared 0.16.0 + host 0.14.0, which is why
-  those two pins moved together: a `0.x` caret is minor-locked, so `^0.15.0`
-  would have kept resolving the toast-less build. (That is provenance, not the
-  current requirement — read `package.json` for the pins in force.)
-- **Mobile behaviour comes from the library, not from this repo.** Since
-  tds-shared 0.18.0 a `.tds-table` scrolls itself below 40rem, `.tds-page__head`
-  stacks, interactive chips take the 44px touch target and the fixed bottom
-  elements clear the home indicator. Don't wrap a table in an `overflow-x` here
-  and don't add a competing breakpoint — fix it in tds-shared and repin.
-- **`npm install --no-package-lock`** — the Windows-generated lockfile is win32-only and
-  breaks the Linux CI build (`npm ci` fails). CI uses `--no-package-lock`; match it locally.
-- **`tsconfig.json` must exclude `release/`.** `postbuild` puts a complete application and
-  its bundled dependencies there; without the exclusion `astro check` reports errors from
-  generated dependency code instead of this product.
-- **Each extension is pinned to its current `0.MINOR.x` line** (a 0.x caret never crosses
-  the minor) — a release this product should pick up must stay in that extension's pinned
-  line. Crossing it requires a matching dependency update here first.
-- **`@source` in the host's `global.css` makes Tailwind scan the extension packages** for
-  utility classes (node_modules is ignored by default). It's in the host, not here — don't
-  add a competing `@source`, but know that ext-only utilities depend on it.
-- **`PACKAGE_TOKEN`** (classic PAT, `read:packages` + repo, SSO'd) is required to install the
-  host + extensions from Packages and to push the deploy branch. `DEPLOY_WEBHOOK_URL` is
-  optional (unset ⇒ the `release` branch still publishes, the host just isn't pinged).
-
-## Build & deploy
+## Commands
 
 ```bash
-npm install --no-package-lock   # host + extensions from GitHub Packages (needs NPM_TOKEN)
+npm install --no-package-lock   # needs NPM_TOKEN; never npm ci (win32 lockfile breaks Linux CI)
 npm run dev                     # astro dev
-npm run build                   # → dist/, then postbuild assembles release/  (FRONTEND_TARGET=admin)
+npm run type-check              # astro check
+npm run test:run                # vitest: composition + SSR invariants
+npm run build                   # astro build → dist/, postbuild assembles release/
+npm start                       # run release/app.cjs locally
 ```
 
-- **`dev` branch** — auto-built on every push to `main` (`dev.yml`); staging artifact, not
-  deployed.
-- **`release` branch** — the manual Actions button (`release.yml`): builds, force-pushes
-  `release/` to `release`, pings `DEPLOY_WEBHOOK_URL`. The production host pulls `release`.
+## Hard rules
 
-## Tests
+- **Never fork base UI into this repo.** Change the host or tds-shared, release, then repin here.
+- Adding an extension is three edits: the import, the `extensions` array and `dependencies`.
+- Keep each extension inside its pinned `0.MINOR.x` line; crossing it needs a dependency update here first.
+- `npm ls @tracht-digital-solutions/tds-shared` must show exactly one version.
+- `frontendHost` keeps its `layout` option; `FRONTEND_TARGET=admin` stays on both env vars.
+- No page cache, ever. `vite.ssr.noExternal` covers `@tracht-digital-solutions/`.
+- `public/.htaccess` never gets `Options +FollowSymLinks`.
+- `tsconfig.json` keeps `release/` excluded.
+- Production deploys only via the manual `release.yml` button.
 
-`npm run test:run` (vitest). This repo has no `src/` — its whole job is one
-composition decision, so `test/composition.test.ts` tests that decision against
-the **real installed extension manifests**, not fixtures.
+## Topic files
 
-- `composeExtensions()` runs over the actual admin set and must not throw. It
-  hard-errors on any duplicate extension id, nav id, widget id or route — the FE
-  twin of the shared-`phinxlog` rule — but normally only during a full product
-  build, far from whoever introduced the collision.
-- Every nav entry must target a route some extension or the host actually
-  serves, or it is a 404 in the shipped panel. No extension route may shadow a
-  base route (`/`, `/users`, `/firma`, `/profil`, `/module`, `/einstellungen`,
-  `/wiki`).
-- **`frontendHost` must keep its `layout` option.** Dropping it ships every
-  extension page as a bare unstyled fragment with no `<head>` — the documented
-  "admin frontend has no formatting" bug. Verified: removing it fails the suite.
-- **The build is `output: "server"` with the Node adapter (since 2026-08-25).**
-  Tailwind stays on PostCSS, `tdsViteBuild` stays spread, and `FRONTEND_TARGET`
-  stays on **both** env vars. Four SSR invariants the suite pins, each with a
-  failure that is silent without it:
-  - **`vite.ssr.noExternal` must cover `@tracht-digital-solutions/`.** The
-    production host has no GitHub Packages token, so a first-party specifier
-    that survives into the server bundle is ERR_MODULE_NOT_FOUND at boot.
-    `pack-release.mjs`s `verify()` fails the build on one, every build.
-  - **No page cache, ever.** A panel page belongs to one visitor;
-    `tds-shared/cache` refuses to store a response carrying `Set-Cookie` and
-    cannot key on identity. The three public sites are its consumers, not this one.
-  - **`passthroughImageService()`**, because Astros default image service is
-    sharp — a native addon nothing here needs and every deploy would carry.
-  - **`public/.htaccess` must never gain `Options +FollowSymLinks`.** Plesks
-    AllowOverride grant omits it, and a disallowed Option is FATAL rather than
-    ignored: Apache answers EVERY request with 500. That shipped once already.
-- **The deployed branch is an APPLICATION, not a folder of files.** `release`
-  carries `app.cjs`, `server/`, `client/` (the document root) and a prebuilt
-  `node_modules`. Pushed at a domain still configured for static serving it
-  takes the panel down on every path — which is why `release.yml` lost its
-  push-to-main trigger and the tds-ext-tools dispatch, and why `dev.yml` exists.
-- **The vhosts SPA fallback (`try_files … /index.html`) has to go in the same
-  window as the first SSR deploy.** Left in place it keeps answering every
-  unmatched path — and every mis-resolved relative API call — with 200 and
-  dashboard HTML, which is the documented cause of the calm-permanent-empty-list
-  class of bug. The panel looks entirely healthy, which is why nobody notices.
-- Imports, `dependencies` and the array handed to `frontendHost` must agree in
-  all three directions. A missing dependency works locally via hoisted
-  `node_modules` and fails only the clean CI install; an import that never
-  reaches the array is a silently missing feature.
+| File | Read before |
+|---|---|
+| [docs/agents/architecture.md](docs/agents/architecture.md) | Changing the extension set, host options or anything visual |
+| [docs/agents/deployment.md](docs/agents/deployment.md) | Changing the build, `release/`, workflows or host configuration |
+| [docs/agents/testing.md](docs/agents/testing.md) | Changing tests or the composition |
 
-Adding an extension therefore means three edits — the import, the `extensions`
-array and `dependencies` — and the suite fails if you miss one.
-
-## Version
-
-Bump `package.json` `version` on any composition/config/doc change, and commit the docs +
-version with the code (see the root `CLAUDE.md` "After every task").
+Setup and hosting: [INSTALL.md](INSTALL.md). Workspace rules: `../CLAUDE.md`. Legacy
+replacement status: `../MIGRATION-STATUS.md`.
