@@ -23,7 +23,7 @@ owns only the composition + deploy pipeline:
   dimmed and marked as refreshing until the API answers.
 - The extension set (this repo's only real decision): time-tracker,
   support-tickets, contact-tickets, website-cms, blog-cms, lexware, customers,
-  billing, projects, documents, messages, live-chat-cta, tools, shop and cards.
+  billing, projects, documents, messages, live-chat-cta, tools, shop, cards and analytics.
 
 To add/remove a feature: change the `extensions` array + the matching dep, bump,
 release. To change the shell/base pages: edit the **host** package and release it,

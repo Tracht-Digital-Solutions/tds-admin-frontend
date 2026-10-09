@@ -19,6 +19,7 @@ import messages from "@tracht-digital-solutions/tds-ext-messages";
 import projects from "@tracht-digital-solutions/tds-ext-projects";
 import documents from "@tracht-digital-solutions/tds-ext-documents";
 import cards from "@tracht-digital-solutions/tds-ext-cards";
+import analytics from "@tracht-digital-solutions/tds-ext-analytics";
 
 /**
  * This repo has no source of its own — it makes exactly one decision: which
@@ -54,6 +55,7 @@ const EXTENSIONS: ExtensionManifest[] = [
   projects,
   documents,
   cards,
+  analytics,
 ];
 
 const config = readFileSync(new URL("../astro.config.mjs", import.meta.url), "utf8");

@@ -20,7 +20,7 @@ There is no app source here beyond `astro.config.mjs` and configuration.
 ## The extension set is this repo's only real decision
 
 time-tracker, support-tickets, contact-tickets, live-chat-cta, website-cms, blog-cms, lexware,
-customers, billing, tools, messages, projects, documents, shop and cards.
+customers, billing, tools, messages, projects, documents, shop, cards and analytics.
 
 Adding or removing a feature: change the import, the `extensions` array and the dependency.
 
