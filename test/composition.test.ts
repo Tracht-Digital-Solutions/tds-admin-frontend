@@ -11,6 +11,7 @@ import liveChatCta from "@tracht-digital-solutions/tds-ext-live-chat-cta";
 import websiteCms from "@tracht-digital-solutions/tds-ext-website-cms";
 import blogCms from "@tracht-digital-solutions/tds-ext-blog-cms";
 import shop from "@tracht-digital-solutions/tds-ext-shop";
+import referrals from "@tracht-digital-solutions/tds-ext-referrals";
 import lexware from "@tracht-digital-solutions/tds-ext-lexware";
 import customers from "@tracht-digital-solutions/tds-ext-customers";
 import billing from "@tracht-digital-solutions/tds-ext-billing";
@@ -56,6 +57,7 @@ const EXTENSIONS: ExtensionManifest[] = [
   documents,
   cards,
   analytics,
+  referrals,
 ];
 
 const config = readFileSync(new URL("../astro.config.mjs", import.meta.url), "utf8");
