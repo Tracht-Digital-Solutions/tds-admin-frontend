@@ -1,0 +1,1 @@
+import{r as e}from"./react.sySUN5R7.js";import{r as t}from"./chunk-ERSKINIL.DVT92SLR.js";var n=e({Collapse:()=>t});export{n as t};
