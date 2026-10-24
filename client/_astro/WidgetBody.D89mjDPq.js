@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime.BZnA9PEq.js";import{m as t}from"./components.BGEX_WUT.js";var n=e();function r(){return(0,n.jsx)(t,{endpoint:`/live-chat-cta/summary`,value:e=>Number(e.openChats??0),caption:e=>{let t=Number(e.newContacts??0);return`${t} neue Kontaktanfrage${t===1?``:`n`}`}})}export{r as default};

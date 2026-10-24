@@ -1,0 +1,1 @@
+import{t as e}from"./jsx-runtime.BZnA9PEq.js";import{m as t}from"./components.BGEX_WUT.js";var n=e();function r(){return(0,n.jsx)(t,{endpoint:`/contact/summary`,value:e=>Number(e.new??0),refreshOnModule:`contact-tickets`})}export{r as default};
