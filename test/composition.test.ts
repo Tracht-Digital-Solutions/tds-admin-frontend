@@ -20,6 +20,7 @@ import messages from "@tracht-digital-solutions/tds-ext-messages";
 import projects from "@tracht-digital-solutions/tds-ext-projects";
 import documents from "@tracht-digital-solutions/tds-ext-documents";
 import cards from "@tracht-digital-solutions/tds-ext-cards";
+import opensource from "@tracht-digital-solutions/tds-ext-opensource";
 import analytics from "@tracht-digital-solutions/tds-ext-analytics";
 
 /**
@@ -58,6 +59,7 @@ const EXTENSIONS: ExtensionManifest[] = [
   cards,
   analytics,
   referrals,
+  opensource,
 ];
 
 const config = readFileSync(new URL("../astro.config.mjs", import.meta.url), "utf8");

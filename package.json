@@ -33,6 +33,7 @@
     "@tracht-digital-solutions/tds-ext-lexware": "^0.2.6",
     "@tracht-digital-solutions/tds-ext-live-chat-cta": "^0.1.20",
     "@tracht-digital-solutions/tds-ext-messages": "^0.1.15",
+    "@tracht-digital-solutions/tds-ext-opensource": "^0.1.0",
     "@tracht-digital-solutions/tds-ext-projects": "^0.1.17",
     "@tracht-digital-solutions/tds-ext-referrals": "^0.1.2",
     "@tracht-digital-solutions/tds-ext-shop": "^0.6.8",
