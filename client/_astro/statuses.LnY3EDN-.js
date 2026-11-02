@@ -1,0 +1,1 @@
+var e={discovery:{label:`Analyse`,tone:`info`},in_progress:{label:`In Arbeit`,tone:`warning`},review:{label:`Abnahme`,tone:`cat-violet`},delivered:{label:`Abgeschlossen`,tone:`success`},on_hold:{label:`Pausiert`,tone:`neutral`}},t={pending:{label:`Offen`,tone:`neutral`},in_progress:{label:`In Arbeit`,tone:`warning`},completed:{label:`Erledigt`,tone:`success`}};export{e as n,t};

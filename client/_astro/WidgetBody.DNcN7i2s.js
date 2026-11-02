@@ -1,0 +1,1 @@
+import{m as e}from"./components.BTYwXIUk.js";import{t}from"./jsx-runtime.CpoXNhZb.js";var n=t();function r(){return(0,n.jsx)(e,{endpoint:`/companies/summary`,caption:()=>`Firmen im Verzeichnis`})}export{r as default};
