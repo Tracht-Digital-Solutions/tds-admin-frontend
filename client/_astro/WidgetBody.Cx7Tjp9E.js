@@ -1,0 +1,1 @@
+import{m as e}from"./components.BTYwXIUk.js";import{t}from"./jsx-runtime.CpoXNhZb.js";var n=t();function r(){return(0,n.jsx)(e,{endpoint:`/contact/summary`,value:e=>Number(e.new??0),refreshOnModule:`contact-tickets`})}export{r as default};

@@ -1,0 +1,1 @@
+import{m as e}from"./components.BTYwXIUk.js";import{t}from"./jsx-runtime.CpoXNhZb.js";var n=t();function r(){return(0,n.jsx)(e,{endpoint:`/lexware/summary`,value:e=>e.invoiceCount,caption:e=>e.configured?`Rechnungen an Lexware`:`Lexware nicht konfiguriert`})}export{r as default};

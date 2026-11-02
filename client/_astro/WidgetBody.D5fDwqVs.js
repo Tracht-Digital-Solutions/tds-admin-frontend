@@ -1,0 +1,1 @@
+import{m as e}from"./components.BTYwXIUk.js";import{t}from"./jsx-runtime.CpoXNhZb.js";var n=t();function r(){return(0,n.jsx)(e,{endpoint:`/blog/summary`,value:e=>Number(e.posts??0)})}export{r as default};

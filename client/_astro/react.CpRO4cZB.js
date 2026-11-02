@@ -1,0 +1,1 @@
+import{n as e}from"./rolldown-runtime.XKyaHtl9.js";import{r as t}from"./chunk-ERSKINIL.CBJ6geRM.js";var n=e({Collapse:()=>t});export{n as t};
