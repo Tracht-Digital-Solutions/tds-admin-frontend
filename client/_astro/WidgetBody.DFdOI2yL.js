@@ -1,0 +1,1 @@
+import{m as e}from"./components.BJXK0uHt.js";import{t}from"./jsx-runtime.CpoXNhZb.js";var n=t();function r(){return(0,n.jsx)(e,{endpoint:`/cards/summary`,value:e=>(0,n.jsxs)(n.Fragment,{children:[e.published,(0,n.jsxs)(`span`,{className:`marginalia`,children:[` von `,e.total,` veröffentlicht`]})]})})}export{r as default};

@@ -1,0 +1,1 @@
+import{m as e}from"./components.BJXK0uHt.js";import{t}from"./jsx-runtime.CpoXNhZb.js";var n=t();function r(){return(0,n.jsx)(e,{endpoint:`/messages/summary`,value:e=>Number(e.unread??0)})}export{r as default};
