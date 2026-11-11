@@ -1,0 +1,1 @@
+import{m as e}from"./components.BJXK0uHt.js";import{t}from"./jsx-runtime.CpoXNhZb.js";var n=t();function r(){return(0,n.jsx)(e,{endpoint:`/live-chat-cta/summary`,value:e=>Number(e.openChats??0),caption:e=>{let t=Number(e.newContacts??0);return`${t} neue Kontaktanfrage${t===1?``:`n`}`}})}export{r as default};

@@ -1,0 +1,1 @@
+import{m as e}from"./components.BJXK0uHt.js";import{t}from"./jsx-runtime.CpoXNhZb.js";var n=t();function r(){return(0,n.jsx)(e,{endpoint:`/cms/summary`,value:e=>Number(e.sites??0)})}export{r as default};
